@@ -31,7 +31,7 @@ import com.jorgealfonsogarcia.recommender.domain.models.MoviePageResponse;
 import com.jorgealfonsogarcia.recommender.domain.models.MovieResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.caffeine.CaffeineCacheManager;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -40,7 +40,6 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -53,7 +52,7 @@ import java.util.stream.Collectors;
 @Service
 public class MovieService {
 
-    private final CaffeineCacheManager caffeineCacheManager;
+    private final CacheManager caffeineCacheManager;
     private final WebClient webClient;
 
     /**
@@ -67,7 +66,7 @@ public class MovieService {
     @Autowired
     public MovieService(@Value("${movie.service.url}") String movieServiceUrl,
                         @Value("${AUTH_TOKEN}") String authToken,
-                        CaffeineCacheManager caffeineCacheManager,
+                        CacheManager caffeineCacheManager,
                         WebClient.Builder builder) {
         this.caffeineCacheManager = caffeineCacheManager;
 
@@ -111,7 +110,11 @@ public class MovieService {
         var cacheKey = "genres_%s".formatted(language);
         var cache = caffeineCacheManager.getCache("moviesCache");
 
-        return Mono.justOrEmpty(Objects.requireNonNull(cache).get(cacheKey))
+        if (cache == null) {
+            return getGenresFromApi(language);
+        }
+
+        return Mono.justOrEmpty(cache.get(cacheKey))
                 .mapNotNull(value -> {
                     var o = value.get();
                     if (o instanceof List) {

@@ -56,4 +56,39 @@ public record MovieResponse(
 
     @Serial
     private static final long serialVersionUID = 8932131531162635163L;
+
+    /**
+     * Constructor.
+     *
+     * @param id               The id.
+     * @param genres           The genres name.
+     * @param originalLanguage The original language.
+     * @param originalTitle    The original title.
+     * @param title            The title in English.
+     * @param overview         The overview.
+     * @param popularity       The popularity.
+     * @param releaseDate      The release date. It is represented by a ISO 8601 format.
+     */
+    public MovieResponse(Integer id,
+                         List<String> genres,
+                         String originalLanguage,
+                         String originalTitle,
+                         String title,
+                         String overview,
+                         Integer popularity,
+                         String releaseDate) {
+        this.id = id;
+        this.genres = genres == null ? List.of() : List.copyOf(genres);
+        this.originalLanguage = originalLanguage;
+        this.originalTitle = originalTitle;
+        this.title = title;
+        this.overview = overview;
+        this.popularity = popularity;
+        this.releaseDate = releaseDate;
+    }
+
+    @Override
+    public List<String> genres() {
+        return genres == null ? List.of() : List.copyOf(genres);
+    }
 }

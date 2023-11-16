@@ -22,43 +22,35 @@
  * SOFTWARE.
  */
 
-package com.jorgealfonsogarcia.recommender.domain.models;
+package com.jorgealfonsogarcia.recommender.controllers.component;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.io.Serial;
-import java.io.Serializable;
-import java.util.List;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilter;
+import org.springframework.web.server.WebFilterChain;
+import reactor.core.publisher.Mono;
 
 /**
- * Represents a movie's genres response.
+ * Adds security headers to the response.
  *
- * @param genres The genres.
  * @author Jorge Garcia
  * @version 1.0.0
  * @since 21
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public record GenresResponse(
-        @JsonProperty("genres")
-        List<Genre> genres
-) implements Serializable {
+@Component
+@Order(-1)
+public class SecurityWebFilter implements WebFilter {
 
-    @Serial
-    private static final long serialVersionUID = -6909083000233693475L;
-
-    /**
-     * Constructor.
-     *
-     * @param genres the genres.
-     */
-    public GenresResponse(@JsonProperty("genres") List<Genre> genres) {
-        this.genres = genres == null ? List.of() : List.copyOf(genres);
-    }
-
+    @SuppressWarnings({"NullableProblems", "SpellCheckingInspection", "UastIncorrectHttpHeaderInspection"})
     @Override
-    public List<Genre> genres() {
-        return genres == null ? List.of() : List.copyOf(genres);
+    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        final var headers = exchange.getResponse().getHeaders();
+        headers.set("X-Content-Type-Options", "nosniff");
+        headers.set("Content-Security-Policy", "default-src 'self'; object-src 'none';");
+        headers.set("X-Frame-Options", "DENY");
+        headers.set("X-XSS-Protection", "1; mode=block");
+        headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+        return chain.filter(exchange);
     }
 }

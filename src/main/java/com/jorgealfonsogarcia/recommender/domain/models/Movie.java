@@ -99,4 +99,57 @@ public record Movie(
 
     @Serial
     private static final long serialVersionUID = -987312235095950089L;
+
+    /**
+     * Constructor.
+     *
+     * @param adult            Whether the movie is for adults.
+     * @param backdropPath     The backdrop path.
+     * @param genreIds         The genre ids.
+     * @param id               The id.
+     * @param originalLanguage The original language. It is represented by a ISO 639-1 code.
+     * @param originalTitle    The original title.
+     * @param overview         The overview.
+     * @param popularity       The popularity.
+     * @param posterPath       The poster path.
+     * @param releaseDate      The release date. It is represented by a ISO 8601 format.
+     * @param title            The title in English.
+     * @param video            Whether the movie has video.
+     * @param voteAverage      The vote average.
+     * @param voteCount        The vote count.
+     */
+    public Movie(Boolean adult,
+                 String backdropPath,
+                 List<Integer> genreIds,
+                 Integer id,
+                 String originalLanguage,
+                 String originalTitle,
+                 String overview,
+                 Double popularity,
+                 String posterPath,
+                 String releaseDate,
+                 String title,
+                 Boolean video,
+                 Double voteAverage,
+                 Integer voteCount) {
+        this.adult = adult;
+        this.backdropPath = backdropPath;
+        this.genreIds = genreIds == null ? List.of() : List.copyOf(genreIds);
+        this.id = id;
+        this.originalLanguage = originalLanguage;
+        this.originalTitle = originalTitle;
+        this.overview = overview;
+        this.popularity = popularity;
+        this.posterPath = posterPath;
+        this.releaseDate = releaseDate;
+        this.title = title;
+        this.video = video;
+        this.voteAverage = voteAverage;
+        this.voteCount = voteCount;
+    }
+
+    @Override
+    public List<Integer> genreIds() {
+        return genreIds == null ? List.of() : List.copyOf(genreIds);
+    }
 }

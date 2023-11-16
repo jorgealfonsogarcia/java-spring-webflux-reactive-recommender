@@ -59,4 +59,27 @@ public record MoviePageResponse(
 
     @Serial
     private static final long serialVersionUID = 5056144134119963251L;
+
+    /**
+     * Constructor.
+     *
+     * @param page         The page number.
+     * @param results      The movies.
+     * @param totalPages   The total number of pages.
+     * @param totalResults The total number of results.
+     */
+    public MoviePageResponse(Integer page,
+                             List<Movie> results,
+                             Integer totalPages,
+                             Integer totalResults) {
+        this.page = page;
+        this.results = results == null ? List.of() : List.copyOf(results);
+        this.totalPages = totalPages;
+        this.totalResults = totalResults;
+    }
+
+    @Override
+    public List<Movie> results() {
+        return results == null ? List.of() : List.copyOf(results);
+    }
 }
