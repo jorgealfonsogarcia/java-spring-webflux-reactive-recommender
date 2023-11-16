@@ -125,7 +125,7 @@ public class MovieController {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             })
     @GetMapping("/genres/{language}")
-    public Mono<List<Genre>> getAllGenres(
+    public Mono<List<Genre>> getGenres(
             @Parameter(description = "The ISO 639-1 language code")
             @PathVariable String language
     ) {
