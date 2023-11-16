@@ -148,6 +148,7 @@ public record Movie(
         this.voteCount = voteCount;
     }
 
+    @JsonProperty("genre_ids")
     @Override
     public List<Integer> genreIds() {
         return genreIds == null ? List.of() : List.copyOf(genreIds);

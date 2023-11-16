@@ -29,6 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 /**
  * Manages exceptions thrown by the controllers.
@@ -44,11 +45,23 @@ public class GlobalExceptionHandler {
      * Handles IllegalArgumentExceptions thrown by the controllers.
      *
      * @param ex The exception thrown.
-     * @return A ResponseEntity with the error response and the HTTP status code.
+     * @return A ResponseEntity with the error response and an HTTP 400 status code.
      */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
         var errorResponse = new ErrorResponse("Invalid Request", ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Handles WebClientResponseExceptions thrown by the controllers.
+     *
+     * @param ex The exception thrown.
+     * @return A ResponseEntity with the error response and the HTTP status code.
+     */
+    @ExceptionHandler(WebClientResponseException.class)
+    public ResponseEntity<ErrorResponse> handleWebClientResponseException(WebClientResponseException ex) {
+        var errorResponse = new ErrorResponse(ex.getStatusText(), ex.getMessage());
+        return new ResponseEntity<>(errorResponse, ex.getStatusCode());
     }
 }

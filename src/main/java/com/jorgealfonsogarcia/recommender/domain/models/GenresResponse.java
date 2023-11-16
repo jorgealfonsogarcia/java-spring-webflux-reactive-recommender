@@ -53,10 +53,11 @@ public record GenresResponse(
      *
      * @param genres the genres.
      */
-    public GenresResponse(@JsonProperty("genres") List<Genre> genres) {
+    public GenresResponse(List<Genre> genres) {
         this.genres = genres == null ? List.of() : List.copyOf(genres);
     }
 
+    @JsonProperty("genres")
     @Override
     public List<Genre> genres() {
         return genres == null ? List.of() : List.copyOf(genres);

@@ -78,6 +78,7 @@ public record MoviePageResponse(
         this.totalResults = totalResults;
     }
 
+    @JsonProperty("results")
     @Override
     public List<Movie> results() {
         return results == null ? List.of() : List.copyOf(results);

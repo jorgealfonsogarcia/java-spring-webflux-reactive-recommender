@@ -95,7 +95,7 @@ public class MovieService {
                     final var joinedGenreIds = getGenreIdsJoined(genres, genreList);
                     return Flux.range(startYear, endYear - startYear + 1)
                             .flatMap(year -> getMovieFromApi(year, joinedGenreIds, language))
-                            .map(movie -> getMovieMovieResponseFunction(movie, genreList));
+                            .map(movie -> getMovieResponseFunction(movie, genreList));
                 })
                 .sort(Comparator.comparing(movieResponse -> LocalDate.parse(movieResponse.releaseDate())));
     }
@@ -129,8 +129,8 @@ public class MovieService {
                         .doOnSuccess(genres -> cache.put(cacheKey, genres)));
     }
 
-    private MovieResponse getMovieMovieResponseFunction(final Movie movie,
-                                                        final List<Genre> genreList) {
+    private MovieResponse getMovieResponseFunction(final Movie movie,
+                                                   final List<Genre> genreList) {
         final var genreNames = genreList.stream()
                 .filter(genre -> movie.genreIds().contains(genre.id()))
                 .map(Genre::name)
