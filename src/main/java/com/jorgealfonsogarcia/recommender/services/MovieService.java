@@ -26,6 +26,7 @@ package com.jorgealfonsogarcia.recommender.services;
 
 import com.jorgealfonsogarcia.recommender.domain.models.Genre;
 import com.jorgealfonsogarcia.recommender.domain.models.GenresResponse;
+import com.jorgealfonsogarcia.recommender.domain.models.Language;
 import com.jorgealfonsogarcia.recommender.domain.models.Movie;
 import com.jorgealfonsogarcia.recommender.domain.models.MoviePageResponse;
 import com.jorgealfonsogarcia.recommender.domain.models.MovieResponse;
@@ -117,6 +118,19 @@ public class MovieService {
                 })
                 .switchIfEmpty(Mono.defer(() -> getGenresFromApi(language))
                         .doOnSuccess(genres -> cache.put(cacheKey, genres)));
+    }
+
+    /**
+     * Gets all the languages.
+     *
+     * @return A Flux with the languages found.
+     */
+    public Flux<Language> getLanguages() {
+        return movieServiceWebClient.get()
+                .uri("/configuration/languages")
+                .retrieve()
+                .bodyToFlux(Language.class)
+                .sort(Comparator.comparing(Language::englishName));
     }
 
     private MovieResponse getMovieResponseFunction(final Movie movie,

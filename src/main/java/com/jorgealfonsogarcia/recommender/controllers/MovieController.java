@@ -25,6 +25,7 @@
 package com.jorgealfonsogarcia.recommender.controllers;
 
 import com.jorgealfonsogarcia.recommender.domain.models.Genre;
+import com.jorgealfonsogarcia.recommender.domain.models.Language;
 import com.jorgealfonsogarcia.recommender.domain.models.MovieResponse;
 import com.jorgealfonsogarcia.recommender.services.MovieService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -128,5 +129,22 @@ public class MovieController {
             @Parameter(description = "The ISO 639-1 language code")
             @PathVariable String language) {
         return movieService.getGenres(language);
+    }
+
+    /**
+     * Gets all the languages.
+     *
+     * @return A Flux with the languages found.
+     */
+    @Operation(summary = "Get all languages",
+            description = "Retrieves a list of all languages.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successful retrieval of languages",
+                            content = @Content(mediaType = "application/json")),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            })
+    @GetMapping("/languages")
+    public Flux<Language> getLanguages() {
+        return movieService.getLanguages();
     }
 }

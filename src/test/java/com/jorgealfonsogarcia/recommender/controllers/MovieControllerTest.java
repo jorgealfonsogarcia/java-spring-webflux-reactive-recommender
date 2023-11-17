@@ -25,6 +25,7 @@
 package com.jorgealfonsogarcia.recommender.controllers;
 
 import com.jorgealfonsogarcia.recommender.domain.models.Genre;
+import com.jorgealfonsogarcia.recommender.domain.models.Language;
 import com.jorgealfonsogarcia.recommender.domain.models.MovieResponse;
 import com.jorgealfonsogarcia.recommender.services.MovieService;
 import org.junit.jupiter.api.Test;
@@ -151,5 +152,27 @@ class MovieControllerTest {
                 .verifyComplete();
 
         verify(movieService).getGenres(anyString());
+    }
+
+    /**
+     * GIVEN: Call.
+     * WHEN: Get languages.
+     * THEN: Return a flux.
+     */
+    @Test
+    void givenCall_whenGetLanguages_thenReturnFlux() {
+        final var language = new Language("en", "English", "English");
+        final var languageFlux = Flux.just(language);
+        doReturn(languageFlux).when(movieService).getLanguages();
+
+        final var result = movieController.getLanguages();
+
+        assertNotNull(result);
+
+        StepVerifier.create(result)
+                .expectNext(language)
+                .verifyComplete();
+
+        verify(movieService).getLanguages();
     }
 }

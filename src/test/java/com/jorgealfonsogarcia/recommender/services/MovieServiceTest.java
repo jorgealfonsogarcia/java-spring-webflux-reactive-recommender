@@ -26,6 +26,7 @@ package com.jorgealfonsogarcia.recommender.services;
 
 import com.jorgealfonsogarcia.recommender.domain.models.Genre;
 import com.jorgealfonsogarcia.recommender.domain.models.GenresResponse;
+import com.jorgealfonsogarcia.recommender.domain.models.Language;
 import com.jorgealfonsogarcia.recommender.domain.models.Movie;
 import com.jorgealfonsogarcia.recommender.domain.models.MoviePageResponse;
 import org.junit.jupiter.api.Test;
@@ -35,7 +36,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -50,6 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -81,13 +82,13 @@ class MovieServiceTest {
     void givenValidParameters_whenSearch_thenReturnFluxMovieResponse() {
         doReturn(null).when(caffeineCacheManager).getCache(anyString());
 
-        final var uriSpec = Mockito.mock(WebClient.RequestHeadersUriSpec.class);
+        final var uriSpec = mock(WebClient.RequestHeadersUriSpec.class);
         doReturn(uriSpec).when(movieServiceWebClient).get();
 
-        final var headersSpec = Mockito.mock(WebClient.RequestHeadersSpec.class);
+        final var headersSpec = mock(WebClient.RequestHeadersSpec.class);
         doReturn(headersSpec).when(uriSpec).uri(anyString(), any(Object[].class));
 
-        final var responseSpec = Mockito.mock(WebClient.ResponseSpec.class);
+        final var responseSpec = mock(WebClient.ResponseSpec.class);
         doReturn(responseSpec).when(headersSpec).retrieve();
 
         final var genresResponseFlux = Flux.just(
@@ -135,10 +136,10 @@ class MovieServiceTest {
 
     @Test
     void givenValidParametersWithCache_whenGetGenres_thenReturnMonoGenres() {
-        final var cache = Mockito.mock(Cache.class);
+        final var cache = mock(Cache.class);
         doReturn(cache).when(caffeineCacheManager).getCache(anyString());
 
-        final var valueWrapper = Mockito.mock(Cache.ValueWrapper.class);
+        final var valueWrapper = mock(Cache.ValueWrapper.class);
         doReturn(valueWrapper).when(cache).get(anyString());
 
         final var genres = List.of(new Genre(1, "Genre 1"), new Genre(2, "Genre 2"));
@@ -174,10 +175,10 @@ class MovieServiceTest {
     @ParameterizedTest
     @MethodSource("givenValidParametersWithCacheWithWrongValues_whenGetGenres_thenReturnMonoClassCastException_source")
     void givenValidParametersWithCacheWithWrongValues_whenGetGenres_thenReturnMonoClassCastException(final Object value) {
-        final var cache = Mockito.mock(Cache.class);
+        final var cache = mock(Cache.class);
         doReturn(cache).when(caffeineCacheManager).getCache(anyString());
 
-        final var valueWrapper = Mockito.mock(Cache.ValueWrapper.class);
+        final var valueWrapper = mock(Cache.ValueWrapper.class);
         doReturn(valueWrapper).when(cache).get(anyString());
 
         doReturn(value).when(valueWrapper).get();
@@ -193,5 +194,45 @@ class MovieServiceTest {
         verify(caffeineCacheManager).getCache(anyString());
         verify(cache).get(anyString());
         verify(valueWrapper).get();
+    }
+
+    /**
+     * GIVEN: Call.
+     * WHEN: Get languages.
+     * THEN: Return a flux of languages sorted by English name.
+     */
+    @Test
+    void givenCall_whenGetLanguages_thenReturnFluxLanguagesSortedByEnglishName() {
+        final var uriSpec = mock(WebClient.RequestHeadersUriSpec.class);
+        doReturn(uriSpec).when(movieServiceWebClient).get();
+
+        final var headersSpec = mock(WebClient.RequestHeadersSpec.class);
+        doReturn(headersSpec).when(uriSpec).uri(anyString());
+
+        final var responseSpec = mock(WebClient.ResponseSpec.class);
+        doReturn(responseSpec).when(headersSpec).retrieve();
+
+        //noinspection SpellCheckingInspection
+        final var esLanguage = new Language("es", "Spanish", "Español");
+        final var enLanguage = new Language("en", "English", "English");
+        final var frLanguage = new Language("fr", "French", "Français");
+        final var itLanguage = new Language("it", "Italian", "Italiano");
+        final var deLanguage = new Language("de", "German", "Deutsch");
+
+        final var languageFlux = Flux.just(esLanguage, enLanguage, frLanguage, itLanguage, deLanguage);
+        doReturn(languageFlux).when(responseSpec).bodyToFlux(Language.class);
+
+        final var result = movieService.getLanguages();
+
+        assertNotNull(result);
+
+        StepVerifier.create(result)
+                .expectNext(enLanguage, frLanguage, deLanguage, itLanguage, esLanguage)
+                .verifyComplete();
+
+        verify(movieServiceWebClient).get();
+        verify(uriSpec).uri(anyString());
+        verify(headersSpec).retrieve();
+        verify(responseSpec).bodyToFlux(Language.class);
     }
 }
