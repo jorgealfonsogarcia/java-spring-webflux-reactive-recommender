@@ -30,7 +30,6 @@ import com.jorgealfonsogarcia.recommender.domain.models.Movie;
 import com.jorgealfonsogarcia.recommender.domain.models.MoviePageResponse;
 import com.jorgealfonsogarcia.recommender.domain.models.MovieResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -53,28 +52,19 @@ import java.util.stream.Collectors;
 public class MovieService {
 
     private final CacheManager caffeineCacheManager;
-    private final WebClient webClient;
+    private final WebClient movieServiceWebClient;
 
     /**
      * Constructor.
      *
-     * @param movieServiceUrl      The movie service URL.
-     * @param authToken            The auth token for the movie service.
-     * @param caffeineCacheManager The Caffeine cache manager.
-     * @param builder              The web client builder.
+     * @param caffeineCacheManager  The Caffeine cache manager.
+     * @param movieServiceWebClient The movie service web client.
      */
     @Autowired
-    public MovieService(@Value("${movie.service.url}") String movieServiceUrl,
-                        @Value("${AUTH_TOKEN}") String authToken,
-                        CacheManager caffeineCacheManager,
-                        WebClient.Builder builder) {
+    public MovieService(CacheManager caffeineCacheManager,
+                        WebClient movieServiceWebClient) {
         this.caffeineCacheManager = caffeineCacheManager;
-
-        webClient = builder
-                .baseUrl(movieServiceUrl)
-                .defaultHeader("Content-Type", "application/json")
-                .defaultHeader("Authorization", "Bearer %s".formatted(authToken))
-                .build();
+        this.movieServiceWebClient = movieServiceWebClient;
     }
 
     /**
@@ -161,7 +151,7 @@ public class MovieService {
     private Flux<Movie> getMovieFromApi(final Integer primaryReleaseYear,
                                         final String genreIds,
                                         final String language) {
-        return webClient.get()
+        return movieServiceWebClient.get()
                 .uri("/discover/movie?" +
                                 "include_adult=false&" +
                                 "include_video=false&" +
@@ -179,7 +169,7 @@ public class MovieService {
     }
 
     private Mono<List<Genre>> getGenresFromApi(final String language) {
-        return webClient.get()
+        return movieServiceWebClient.get()
                 .uri("/genre/movie/list?language={language}", language)
                 .retrieve()
                 .bodyToFlux(GenresResponse.class)

@@ -30,15 +30,15 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
+import reactor.util.context.Context;
 
-import static com.jorgealfonsogarcia.recommender.config.ApplicationHttpHeaders.CONTENT_SECURITY_POLICY;
-import static com.jorgealfonsogarcia.recommender.config.ApplicationHttpHeaders.STRICT_TRANSPORT_SECURITY;
-import static com.jorgealfonsogarcia.recommender.config.ApplicationHttpHeaders.X_CONTENT_TYPE_OPTIONS;
-import static com.jorgealfonsogarcia.recommender.config.ApplicationHttpHeaders.X_FRAME_OPTIONS;
-import static com.jorgealfonsogarcia.recommender.config.ApplicationHttpHeaders.X_XSS_PROTECTION;
+import java.util.Optional;
+import java.util.UUID;
+
+import static com.jorgealfonsogarcia.recommender.config.ApplicationHttpHeaders.X_REQUEST_ID;
 
 /**
- * Adds security headers to the response.
+ * Adds the X-Request-Id header to the request.
  *
  * @author Jorge Garcia
  * @version 1.0.0
@@ -46,17 +46,15 @@ import static com.jorgealfonsogarcia.recommender.config.ApplicationHttpHeaders.X
  */
 @Component
 @Order(-1)
-public class SecurityWebFilter implements WebFilter {
+public class XRequestIdWebFilter implements WebFilter {
 
-    @SuppressWarnings({"NullableProblems", "SpellCheckingInspection"})
+    @SuppressWarnings("NullableProblems")
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        final var headers = exchange.getResponse().getHeaders();
-        headers.set(X_CONTENT_TYPE_OPTIONS.getHeader(), "nosniff");
-        headers.set(CONTENT_SECURITY_POLICY.getHeader(), "default-src 'self'; object-src 'none';");
-        headers.set(X_FRAME_OPTIONS.getHeader(), "DENY");
-        headers.set(X_XSS_PROTECTION.getHeader(), "1; mode=block");
-        headers.set(STRICT_TRANSPORT_SECURITY.getHeader(), "max-age=31536000; includeSubDomains");
-        return chain.filter(exchange);
+        final var requestId = Optional.ofNullable(exchange.getRequest().getHeaders().getFirst(X_REQUEST_ID.getHeader()))
+                .orElseGet(() -> UUID.randomUUID().toString());
+
+        return chain.filter(exchange)
+                .contextWrite(Context.of(X_REQUEST_ID.getHeader(), requestId));
     }
 }

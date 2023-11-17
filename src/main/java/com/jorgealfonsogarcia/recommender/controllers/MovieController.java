@@ -96,8 +96,7 @@ public class MovieController {
             @RequestParam List<String> genres,
 
             @Parameter(description = "The language. It should be ISO 639-1")
-            @RequestParam String language
-    ) {
+            @RequestParam String language) {
 
         if (endYear - startYear > 5) {
             return Flux.error(new IllegalArgumentException("Year range should not exceed 5 years"));
@@ -127,8 +126,7 @@ public class MovieController {
     @GetMapping("/genres/{language}")
     public Mono<List<Genre>> getGenres(
             @Parameter(description = "The ISO 639-1 language code")
-            @PathVariable String language
-    ) {
+            @PathVariable String language) {
         return movieService.getGenres(language);
     }
 }

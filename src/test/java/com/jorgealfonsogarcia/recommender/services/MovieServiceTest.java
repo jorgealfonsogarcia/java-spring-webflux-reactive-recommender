@@ -28,13 +28,12 @@ import com.jorgealfonsogarcia.recommender.domain.models.Genre;
 import com.jorgealfonsogarcia.recommender.domain.models.GenresResponse;
 import com.jorgealfonsogarcia.recommender.domain.models.Movie;
 import com.jorgealfonsogarcia.recommender.domain.models.MoviePageResponse;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -68,29 +67,10 @@ class MovieServiceTest {
     private CacheManager caffeineCacheManager;
 
     @Mock
-    private WebClient.Builder builder;
+    private WebClient movieServiceWebClient;
 
-    @Mock
-    private WebClient webClient;
-
+    @InjectMocks
     private MovieService movieService;
-
-    @BeforeEach
-    void setUp() {
-        doReturn(builder).when(builder).baseUrl(anyString());
-        doReturn(builder).when(builder).defaultHeader(anyString(), any(String[].class));
-        doReturn(webClient).when(builder).build();
-
-        movieService = new MovieService("dummy.url", "dummy.auth.token", caffeineCacheManager,
-                builder);
-    }
-
-    @AfterEach
-    void tearDown() {
-        verify(builder).baseUrl(anyString());
-        verify(builder, times(2)).defaultHeader(anyString(), any(String[].class));
-        verify(builder).build();
-    }
 
     /**
      * GIVEN: Valid parameters.
@@ -102,7 +82,7 @@ class MovieServiceTest {
         doReturn(null).when(caffeineCacheManager).getCache(anyString());
 
         final var uriSpec = Mockito.mock(WebClient.RequestHeadersUriSpec.class);
-        doReturn(uriSpec).when(webClient).get();
+        doReturn(uriSpec).when(movieServiceWebClient).get();
 
         final var headersSpec = Mockito.mock(WebClient.RequestHeadersSpec.class);
         doReturn(headersSpec).when(uriSpec).uri(anyString(), any(Object[].class));
@@ -146,7 +126,7 @@ class MovieServiceTest {
                 .verifyComplete();
 
         verify(caffeineCacheManager).getCache(anyString());
-        verify(webClient, times(5)).get();
+        verify(movieServiceWebClient, times(5)).get();
         verify(uriSpec, times(5)).uri(anyString(), any(Object[].class));
         verify(headersSpec, times(5)).retrieve();
         verify(responseSpec).bodyToFlux(GenresResponse.class);

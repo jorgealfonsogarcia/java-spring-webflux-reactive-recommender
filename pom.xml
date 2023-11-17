@@ -44,11 +44,13 @@
         <snakeyaml.version>2.2</snakeyaml.version>
 
         <sonar.coverage.exclusions>
+            com/jorgealfonsogarcia/recommender/config/**,
             com/jorgealfonsogarcia/recommender/controllers/component/**,
             com/jorgealfonsogarcia/recommender/domain/models/**,
             com/jorgealfonsogarcia/recommender/Application.java
         </sonar.coverage.exclusions>
         <sonar.exclusions>
+            **com/jorgealfonsogarcia/recommender/config/**,
             **com/jorgealfonsogarcia/recommender/controllers/component/**,
             **com/jorgealfonsogarcia/recommender/domain/models/**,
             **com/jorgealfonsogarcia/recommender/Application.java
@@ -148,6 +150,7 @@
                 <version>0.8.11</version>
                 <configuration>
                     <excludes>
+                        <exclude>com/jorgealfonsogarcia/recommender/config/**</exclude>
                         <exclude>com/jorgealfonsogarcia/recommender/controllers/component/**</exclude>
                         <exclude>com/jorgealfonsogarcia/recommender/domain/models/**</exclude>
                         <exclude>com/jorgealfonsogarcia/recommender/Application.class</exclude>
