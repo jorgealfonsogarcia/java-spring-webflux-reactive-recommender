@@ -38,11 +38,13 @@
     <name>java-spring-webflux-reactive-recommender</name>
     <description>java-spring-webflux-reactive-recommender</description>
     <properties>
-        <java.version>21</java.version>
+        <java.version>17</java.version>
 
         <netty.version>4.1.101.Final</netty.version>
         <snakeyaml.version>2.2</snakeyaml.version>
 
+        <sonar.organization>jorgealfonsogarcia</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <sonar.coverage.exclusions>
             com/jorgealfonsogarcia/recommender/config/**,
             com/jorgealfonsogarcia/recommender/controllers/component/**,
