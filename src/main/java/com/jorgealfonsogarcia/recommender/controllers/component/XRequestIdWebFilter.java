@@ -51,10 +51,12 @@ public class XRequestIdWebFilter implements WebFilter {
     @SuppressWarnings("NullableProblems")
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        final var requestId = Optional.ofNullable(exchange.getRequest().getHeaders().getFirst(X_REQUEST_ID.getHeader()))
+        final var header = X_REQUEST_ID.getHeader();
+        final var requestId = Optional.ofNullable(exchange.getRequest().getHeaders().getFirst(header))
                 .orElseGet(() -> UUID.randomUUID().toString());
 
-        return chain.filter(exchange)
-                .contextWrite(Context.of(X_REQUEST_ID.getHeader(), requestId));
+        exchange.getResponse().getHeaders().add(header, requestId);
+
+        return chain.filter(exchange).contextWrite(Context.of(header, requestId));
     }
 }
