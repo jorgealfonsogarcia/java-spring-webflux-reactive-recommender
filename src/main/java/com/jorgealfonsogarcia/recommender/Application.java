@@ -25,12 +25,14 @@
 package com.jorgealfonsogarcia.recommender;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.jorgealfonsogarcia.recommender.config.AppProperties;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
@@ -47,6 +49,7 @@ import java.util.concurrent.TimeUnit;
  */
 @SpringBootApplication
 @EnableCaching
+@EnableConfigurationProperties(AppProperties.class)
 public class Application {
 
     /**
