@@ -41,7 +41,7 @@ import java.util.List;
  * @param releaseDate      The release date. It is represented by a ISO 8601 format.
  * @author Jorge Garcia
  * @version 1.0.0
- * @since 21
+ * @since 17
  */
 public record MovieResponse(
         Integer id,

@@ -29,22 +29,45 @@ import org.springframework.boot.context.properties.bind.ConstructorBinding;
 
 import java.util.Objects;
 
+/**
+ * Configures the application properties.
+ *
+ * @author Jorge Garcia
+ * @version 1.0.0
+ * @since 17
+ */
 @ConfigurationProperties(prefix = "app")
 public class AppProperties {
 
     private final String version;
     private final String artifactId;
 
+    /**
+     * Constructor.
+     *
+     * @param version    The application version.
+     * @param artifactId The application artifact id.
+     */
     @ConstructorBinding
     public AppProperties(String version, String artifactId) {
         this.version = version;
         this.artifactId = artifactId;
     }
 
+    /**
+     * Gets the application version.
+     *
+     * @return The application version.
+     */
     public String getVersion() {
         return version;
     }
 
+    /**
+     * Gets the application artifact id.
+     *
+     * @return The application artifact id.
+     */
     public String getArtifactId() {
         return artifactId;
     }

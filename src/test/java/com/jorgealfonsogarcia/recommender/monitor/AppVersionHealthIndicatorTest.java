@@ -41,7 +41,7 @@ import static org.springframework.boot.actuate.health.Status.UP;
  *
  * @author Jorge Garcia
  * @version 1.0.0
- * @since 21
+ * @since 17
  */
 @ExtendWith(MockitoExtension.class)
 class AppVersionHealthIndicatorTest {

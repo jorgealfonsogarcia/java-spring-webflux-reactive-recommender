@@ -38,7 +38,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
  *
  * @author Jorge Garcia
  * @version 1.0.0
- * @since 21
+ * @since 17
  */
 @Configuration
 public class WebClientConfig {

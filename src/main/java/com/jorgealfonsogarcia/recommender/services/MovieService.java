@@ -52,7 +52,7 @@ import static com.jorgealfonsogarcia.recommender.utils.ResilienceUtils.applyResi
  *
  * @author Jorge Garcia
  * @version 1.0.0
- * @since 21
+ * @since 17
  */
 @Service
 public class MovieService {

@@ -37,7 +37,7 @@ import java.io.Serializable;
  * @param name The name.
  * @author Jorge Garcia
  * @version 1.0.0
- * @since 21
+ * @since 17
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record Genre(

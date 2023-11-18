@@ -68,7 +68,7 @@ import static org.mockito.Mockito.verify;
  *
  * @author Jorge Garcia
  * @version 1.0.0
- * @since 21
+ * @since 17
  */
 @ExtendWith(MockitoExtension.class)
 class MovieServiceTest {
