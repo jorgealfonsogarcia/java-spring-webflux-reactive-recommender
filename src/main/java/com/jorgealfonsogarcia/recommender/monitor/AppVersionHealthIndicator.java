@@ -24,7 +24,8 @@
 
 package com.jorgealfonsogarcia.recommender.monitor;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.jorgealfonsogarcia.recommender.config.AppProperties;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
@@ -39,19 +40,20 @@ import org.springframework.stereotype.Component;
 @Component
 public class AppVersionHealthIndicator implements HealthIndicator {
 
-    private final String version;
+    private final AppProperties appProperties;
 
     /**
      * Constructor.
      *
-     * @param version The application version.
+     * @param appProperties The application version.
      */
-    public AppVersionHealthIndicator(@Value("${app.version}") String version) {
-        this.version = version;
+    @Autowired
+    public AppVersionHealthIndicator(AppProperties appProperties) {
+        this.appProperties = appProperties;
     }
 
     @Override
     public Health health() {
-        return Health.up().withDetail("version", version).build();
+        return Health.up().withDetail("version", appProperties.getVersion()).build();
     }
 }

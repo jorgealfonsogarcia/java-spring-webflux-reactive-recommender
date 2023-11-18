@@ -1,0 +1,9 @@
+{
+  "properties": [
+    {
+      "name": "app.artifact-id",
+      "type": "java.lang.String",
+      "description": "The ID of the artifact."
+    }
+  ]
+}

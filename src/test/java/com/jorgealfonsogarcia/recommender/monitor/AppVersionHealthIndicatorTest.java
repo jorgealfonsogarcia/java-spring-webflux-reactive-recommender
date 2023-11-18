@@ -24,9 +24,16 @@
 
 package com.jorgealfonsogarcia.recommender.monitor;
 
+import com.jorgealfonsogarcia.recommender.config.AppProperties;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
 import static org.springframework.boot.actuate.health.Status.UP;
 
 /**
@@ -36,11 +43,16 @@ import static org.springframework.boot.actuate.health.Status.UP;
  * @version 1.0.0
  * @since 21
  */
+@ExtendWith(MockitoExtension.class)
 class AppVersionHealthIndicatorTest {
 
     private static final String VERSION = "1.0.0";
 
-    private final AppVersionHealthIndicator appVersionHealthIndicator = new AppVersionHealthIndicator(VERSION);
+    @Mock
+    private AppProperties appProperties;
+
+    @InjectMocks
+    private AppVersionHealthIndicator appVersionHealthIndicator;
 
     /**
      * GIVEN:   A call to the health indicator.
@@ -49,9 +61,13 @@ class AppVersionHealthIndicatorTest {
      */
     @Test
     void givenCall_whenHealth_thenStatusUpAndVersion() {
+        doReturn(VERSION).when(appProperties).getVersion();
+
         final var result = appVersionHealthIndicator.health();
 
         assertEquals(UP, result.getStatus());
         assertEquals(VERSION, result.getDetails().get("version"));
+
+        verify(appProperties).getVersion();
     }
 }
