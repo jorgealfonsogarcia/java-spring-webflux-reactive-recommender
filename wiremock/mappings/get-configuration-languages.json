@@ -1,0 +1,36 @@
+{
+  "mappings": [
+    {
+      "scenarioName": "get-configuration-languages",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "SecondCall",
+      "request": {
+        "method": "GET",
+        "url": "/configuration/languages"
+      },
+      "response": {
+        "status": 500,
+        "body": "{ \"success\": false, \"status_code\": 34, \"status_message\": \"Internal Server Error.\" }",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "scenarioName": "get-configuration-languages",
+      "requiredScenarioState": "SecondCall",
+      "newScenarioState": "Started",
+      "request": {
+        "method": "GET",
+        "url": "/configuration/languages"
+      },
+      "response": {
+        "status": 200,
+        "body": "[ { \"iso_639_1\": \"es\", \"english_name\": \"Spanish\", \"name\": \"Español\" }, { \"iso_639_1\": \"en\", \"english_name\": \"English\", \"name\": \"English\" }, { \"iso_639_1\": \"fr\", \"english_name\": \"French\", \"name\": \"Français\" }, { \"iso_639_1\": \"it\", \"english_name\": \"Italian\", \"name\": \"Italiano\" }, { \"iso_639_1\": \"de\", \"english_name\": \"German\", \"name\": \"Deutsch\" } ]",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    }
+  ]
+}

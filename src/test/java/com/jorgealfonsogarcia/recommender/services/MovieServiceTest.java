@@ -29,6 +29,9 @@ import com.jorgealfonsogarcia.recommender.domain.models.GenresResponse;
 import com.jorgealfonsogarcia.recommender.domain.models.Language;
 import com.jorgealfonsogarcia.recommender.domain.models.Movie;
 import com.jorgealfonsogarcia.recommender.domain.models.MoviePageResponse;
+import com.jorgealfonsogarcia.recommender.utils.ResilienceUtils;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.retry.Retry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -41,16 +44,22 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static com.jorgealfonsogarcia.recommender.utils.ResilienceUtils.applyResilienceForFlux;
+import static com.jorgealfonsogarcia.recommender.utils.ResilienceUtils.applyResilienceForMono;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -70,6 +79,12 @@ class MovieServiceTest {
     @Mock
     private WebClient movieServiceWebClient;
 
+    @Mock
+    private CircuitBreaker moviesCircuitBreaker;
+
+    @Mock
+    private Retry moviesRetry;
+
     @InjectMocks
     private MovieService movieService;
 
@@ -78,6 +93,7 @@ class MovieServiceTest {
      * WHEN: Search movies.
      * THEN: Return a flux of movie response.
      */
+    @SuppressWarnings("ReactiveStreamsUnusedPublisher")
     @Test
     void givenValidParameters_whenSearch_thenReturnFluxMovieResponse() {
         doReturn(null).when(caffeineCacheManager).getCache(anyString());
@@ -117,21 +133,32 @@ class MovieServiceTest {
         );
         doReturn(moviePageResponseFlux).when(responseSpec).bodyToFlux(MoviePageResponse.class);
 
-        final var result = movieService.search(1982, 1985, List.of("Genre 1", "Genre 2"),
-                "lang");
+        try (var resilienceUtils = mockStatic(ResilienceUtils.class)) {
+            resilienceUtils.when(() -> applyResilienceForMono(any(), eq(moviesCircuitBreaker), eq(moviesRetry)))
+                    .thenAnswer(invocation -> invocation.<Supplier<Mono<List<Genre>>>>getArgument(0).get());
+            resilienceUtils.when(() -> applyResilienceForFlux(any(), eq(moviesCircuitBreaker), eq(moviesRetry)))
+                    .thenAnswer(invocation -> invocation.<Supplier<Flux<MoviePageResponse>>>getArgument(0).get());
 
-        assertNotNull(result);
+            final var result = movieService.search(1982, 1985, List.of("Genre 1", "Genre 2"),
+                    "lang");
 
-        StepVerifier.create(result)
-                .expectNextCount(4)
-                .verifyComplete();
+            assertNotNull(result);
 
-        verify(caffeineCacheManager).getCache(anyString());
-        verify(movieServiceWebClient, times(5)).get();
-        verify(uriSpec, times(5)).uri(anyString(), any(Object[].class));
-        verify(headersSpec, times(5)).retrieve();
-        verify(responseSpec).bodyToFlux(GenresResponse.class);
-        verify(responseSpec, times(4)).bodyToFlux(MoviePageResponse.class);
+            StepVerifier.create(result)
+                    .expectNextCount(4)
+                    .verifyComplete();
+
+            verify(caffeineCacheManager).getCache(anyString());
+            verify(movieServiceWebClient, times(5)).get();
+            verify(uriSpec, times(5)).uri(anyString(), any(Object[].class));
+            verify(headersSpec, times(5)).retrieve();
+            verify(responseSpec).bodyToFlux(GenresResponse.class);
+            verify(responseSpec, times(4)).bodyToFlux(MoviePageResponse.class);
+
+            resilienceUtils.verify(() -> applyResilienceForMono(any(), eq(moviesCircuitBreaker), eq(moviesRetry)));
+            resilienceUtils.verify(() -> applyResilienceForFlux(any(), eq(moviesCircuitBreaker), eq(moviesRetry)),
+                    times(4));
+        }
     }
 
     @Test
@@ -201,6 +228,7 @@ class MovieServiceTest {
      * WHEN: Get languages.
      * THEN: Return a flux of languages sorted by English name.
      */
+    @SuppressWarnings("ReactiveStreamsUnusedPublisher")
     @Test
     void givenCall_whenGetLanguages_thenReturnFluxLanguagesSortedByEnglishName() {
         final var uriSpec = mock(WebClient.RequestHeadersUriSpec.class);
@@ -222,17 +250,24 @@ class MovieServiceTest {
         final var languageFlux = Flux.just(esLanguage, enLanguage, frLanguage, itLanguage, deLanguage);
         doReturn(languageFlux).when(responseSpec).bodyToFlux(Language.class);
 
-        final var result = movieService.getLanguages();
+        try (var resilienceUtils = mockStatic(ResilienceUtils.class)) {
+            resilienceUtils.when(() -> applyResilienceForFlux(any(), eq(moviesCircuitBreaker), eq(moviesRetry)))
+                    .thenAnswer(invocation -> invocation.<Supplier<Flux<Language>>>getArgument(0).get());
 
-        assertNotNull(result);
+            final var result = movieService.getLanguages();
 
-        StepVerifier.create(result)
-                .expectNext(enLanguage, frLanguage, deLanguage, itLanguage, esLanguage)
-                .verifyComplete();
+            assertNotNull(result);
 
-        verify(movieServiceWebClient).get();
-        verify(uriSpec).uri(anyString());
-        verify(headersSpec).retrieve();
-        verify(responseSpec).bodyToFlux(Language.class);
+            StepVerifier.create(result)
+                    .expectNext(enLanguage, frLanguage, deLanguage, itLanguage, esLanguage)
+                    .verifyComplete();
+
+            verify(movieServiceWebClient).get();
+            verify(uriSpec).uri(anyString());
+            verify(headersSpec).retrieve();
+            verify(responseSpec).bodyToFlux(Language.class);
+
+            resilienceUtils.verify(() -> applyResilienceForFlux(any(), eq(moviesCircuitBreaker), eq(moviesRetry)));
+        }
     }
 }

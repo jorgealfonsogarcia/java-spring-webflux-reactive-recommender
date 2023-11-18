@@ -30,6 +30,8 @@ import com.jorgealfonsogarcia.recommender.domain.models.Language;
 import com.jorgealfonsogarcia.recommender.domain.models.Movie;
 import com.jorgealfonsogarcia.recommender.domain.models.MoviePageResponse;
 import com.jorgealfonsogarcia.recommender.domain.models.MovieResponse;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.retry.Retry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
@@ -41,6 +43,9 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.jorgealfonsogarcia.recommender.utils.ResilienceUtils.applyResilienceForFlux;
+import static com.jorgealfonsogarcia.recommender.utils.ResilienceUtils.applyResilienceForMono;
 
 /**
  * Service for the movie resource.
@@ -54,18 +59,26 @@ public class MovieService {
 
     private final CacheManager caffeineCacheManager;
     private final WebClient movieServiceWebClient;
+    private final CircuitBreaker moviesCircuitBreaker;
+    private final Retry moviesRetry;
 
     /**
      * Constructor.
      *
      * @param caffeineCacheManager  The Caffeine cache manager.
      * @param movieServiceWebClient The movie service web client.
+     * @param moviesCircuitBreaker  The movies circuit breaker.
+     * @param moviesRetry           The movies retry.
      */
     @Autowired
     public MovieService(CacheManager caffeineCacheManager,
-                        WebClient movieServiceWebClient) {
+                        WebClient movieServiceWebClient,
+                        CircuitBreaker moviesCircuitBreaker,
+                        Retry moviesRetry) {
         this.caffeineCacheManager = caffeineCacheManager;
         this.movieServiceWebClient = movieServiceWebClient;
+        this.moviesCircuitBreaker = moviesCircuitBreaker;
+        this.moviesRetry = moviesRetry;
     }
 
     /**
@@ -126,11 +139,12 @@ public class MovieService {
      * @return A Flux with the languages found.
      */
     public Flux<Language> getLanguages() {
-        return movieServiceWebClient.get()
-                .uri("/configuration/languages")
-                .retrieve()
-                .bodyToFlux(Language.class)
-                .sort(Comparator.comparing(Language::englishName));
+        return applyResilienceForFlux(() -> movieServiceWebClient.get()
+                        .uri("/configuration/languages")
+                        .retrieve()
+                        .bodyToFlux(Language.class)
+                        .sort(Comparator.comparing(Language::englishName)),
+                moviesCircuitBreaker, moviesRetry);
     }
 
     private MovieResponse getMovieResponseFunction(final Movie movie,
@@ -165,31 +179,33 @@ public class MovieService {
     private Flux<Movie> getMovieFromApi(final Integer primaryReleaseYear,
                                         final String genreIds,
                                         final String language) {
-        return movieServiceWebClient.get()
-                .uri("/discover/movie?" +
-                                "include_adult=false&" +
-                                "include_video=false&" +
-                                "primary_release_year={primaryReleaseYear}&" +
-                                "with_genres={genre}&" +
-                                "with_original_language={language}&" +
-                                "sort_by=popularity.desc",
-                        primaryReleaseYear,
-                        genreIds,
-                        language)
-                .retrieve()
-                .bodyToFlux(MoviePageResponse.class)
-                .map(MoviePageResponse::results)
-                .flatMap(Flux::fromIterable);
+        return applyResilienceForFlux(() -> movieServiceWebClient.get()
+                        .uri("/discover/movie?" +
+                                        "include_adult=false&" +
+                                        "include_video=false&" +
+                                        "primary_release_year={primaryReleaseYear}&" +
+                                        "with_genres={genre}&" +
+                                        "with_original_language={language}&" +
+                                        "sort_by=popularity.desc",
+                                primaryReleaseYear,
+                                genreIds,
+                                language)
+                        .retrieve()
+                        .bodyToFlux(MoviePageResponse.class)
+                        .map(MoviePageResponse::results)
+                        .flatMap(Flux::fromIterable),
+                moviesCircuitBreaker, moviesRetry);
     }
 
     private Mono<List<Genre>> getGenresFromApi(final String language) {
-        return movieServiceWebClient.get()
-                .uri("/genre/movie/list?language={language}", language)
-                .retrieve()
-                .bodyToFlux(GenresResponse.class)
-                .map(GenresResponse::genres)
-                .flatMap(Flux::fromIterable)
-                .sort(Comparator.comparing(Genre::id))
-                .collectList();
+        return applyResilienceForMono(() -> movieServiceWebClient.get()
+                        .uri("/genre/movie/list?language={language}", language)
+                        .retrieve()
+                        .bodyToFlux(GenresResponse.class)
+                        .map(GenresResponse::genres)
+                        .flatMap(Flux::fromIterable)
+                        .sort(Comparator.comparing(Genre::id))
+                        .collectList(),
+                moviesCircuitBreaker, moviesRetry);
     }
 }
